@@ -1,14 +1,14 @@
 import pandas as pd
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
-import plotly
 import plotly.express as px
-import plotly.graph_objects as go
 
 with st.echo(code_location='below'):
+    st.write('Prevalence of cannabis use in the past three months, self-reported, Canada, 2019. '
+             'People shared information about their geography, sex, age group. Recreational cannabis consumption was '
+             'legalaized in Canada on October 17, 2018. ')
     df = pd.read_csv("1310038301_territory.csv")
     gender = pd.read_csv("1310038301_gender.csv")
     age = pd.read_csv("1310038301_age.csv")
@@ -36,7 +36,7 @@ with st.echo(code_location='below'):
     sns.lineplot(x=[Can_per+5, Can_per+5], y=[0, 30.7], ax=ax3, markers=True, color="blue")
     ax3.text(25.85, 28.85, '8 out of 13 territories are in 5% interval', fontsize=14)
     ax3.text(25.85, 29.85, 'Red line indicates the average in the country.', fontsize=14)
-    plt.axvline(Can_per, color='red', linestyle="--")
+    plt.axvline(Can_per, color='red', linestyle=":")
     st.pyplot(fig1)
 
     #BLOCK2
@@ -68,7 +68,12 @@ with st.echo(code_location='below'):
     gen_perc["NUM"] = gender[gender['Self-reported cannabis use in the past three months'] == "Number of people"]["VALUE"].values
     fig4=px.scatter(gen_perc, x="REF_DATE", y="VALUE", animation_frame="REF_DATE", animation_group="GEO",
                     size='NUM', color="GEO", hover_name="GEO", range_x=["2019-01", "2019-12"], range_y=[0, 40], title="Percentage of users among both sexes, quarterly",
-                     labels={'REF_DATE':"Quarter", "VALUE": "Percentage of users", "NUM":"Number of users", "GEO": "Sex"})
+                     labels={'REF_DATE':"Quarter", "VALUE": "Percentage of users", "NUM": "Number of users", "GEO": "Sex"})
+    fig4.add_hline(12.1, line_width=1, fillcolor="red", opacity=0.2, annotation_text="Female, minimum",
+                   annotation_position="bottom right")
+    fig4.add_hline(22.3, line_width=1, fillcolor="blue", opacity=0.2, annotation_text="Male, maximum",
+                   annotation_position="top right")
+
     st.plotly_chart(fig4)
 
     #BLOCK5
@@ -105,7 +110,7 @@ with st.echo(code_location='below'):
     fig6 = (px.scatter(age_dist, x="REF_DATE", y="VALUE", animation_frame="REF_DATE", animation_group="GEO",
                     size='NUM', color="GEO", hover_name="GEO", range_x=["2019-01", "2019-12"], range_y=[0, 40],
                     title="Percentage of users among different age groups, quarterly",
-                    labels={'REF_DATE': "Quarter", "VALUE": "Percentage of users"}))
+                    labels={'REF_DATE': "Quarter", "VALUE": "Percentage of users", "NUM": "Number of users", "GEO": "Age group"}))
 
     age_dist = age[age['Self-reported cannabis use in the past three months'] == "Percentage of people"]
     m6 = age_dist.groupby("REF_DATE").mean().reset_index()["VALUE"].mean()
@@ -114,9 +119,17 @@ with st.echo(code_location='below'):
 
     #BLOCK7
     age_dist = (age[age['Self-reported cannabis use in the past three months'] == "Number of people"]).rename(columns={"GEO":"Age group"})
-    fig7=sns.relplot(x="REF_DATE", y="VALUE", hue="Age group",
-                col="Age group", height=4, kind="line", estimator=None, data=age_dist, linewidth=2.5, col_wrap=3)
-    #fig7.set_titles("Number of users among different age groups, quarterly")
+    fig7=sns.relplot(x="REF_DATE", y="VALUE", hue="Age group", legend=False, col="Age group", height=4, kind="line", estimator=None, data=age_dist, linewidth=2.5, col_wrap=3)
     fig7.set_axis_labels("Quarter", "Number")
     fig7.fig.suptitle("Number of users among different age groups, quarterly",  x=0.5, y=1.05)
+    fig7.add_legend(bbox_to_anchor=(0.9, 0.9), loc='upper left')
+    i, j = 0, 0
+    for ax in fig7.axes.flat:
+        i+=1
+        if i > 3:
+            ax.axhline(y=600, linestyle=":")
+    for ax in fig7.axes.flat:
+        j+=1
+        if j <= 3:
+            ax.axhline(y=1000, linestyle="dashed")
     st.pyplot(fig7)
